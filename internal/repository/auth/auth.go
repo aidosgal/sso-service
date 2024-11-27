@@ -52,6 +52,56 @@ func (r *AuthRepository) GetUserByPhone(ctx context.Context, phone string, app_i
 	return user, nil
 }
 
+func (r *AuthRepository) UpdateUser(ctx context.Context, user *model.User) (*model.User, error) {
+	const op = "repository.UpdateUser"
+
+	_, err := r.db.ExecContext(ctx, `
+		UPDATE users
+		SET name = $1, avatar_url = $2, description = $3
+		WHERE id = $4
+	`, user.Name, user.AvatarUrl, user.Description, user.Id)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return user, nil
+}
+
+func (r *AuthRepository) GetUserById(ctx context.Context, user_id int64) (*model.User, error) {
+	const op = "repository.GetUser"
+	var user model.User
+
+	err := r.db.QueryRowContext(ctx, `
+		SELECT id, name, password, phone, app_id, avatar_url, description, balance
+		FROM users
+		WHERE id = $1
+	`, user_id).Scan(&user.Id, &user.Name, &user.PassHash, &user.Phone, &user.AppId, &user.AvatarUrl, &user.Description, &user.Balance)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return &user, nil
+}
+
+func (r *AuthRepository) DeleteUser(ctx context.Context, user_id int64) (bool, error) {
+	const op = "repository.DeleteUser"
+
+	result, err := r.db.ExecContext(ctx, `
+		DELETE FROM users
+		WHERE id = $1
+	`, user_id)
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return rowsAffected > 0, nil
+}
+
 func (r *AuthRepository) UpdatePassword(ctx context.Context, phone string, app_id int32, password []byte) (model.User, error) {
 	const op = "repository.GetUserByPhone"
 	var user model.User
@@ -84,18 +134,3 @@ func (r *AuthRepository) GetAppById(ctx context.Context, app_id int32) (model.Ap
     return app, nil
 } 
 
-func (r *AuthRepository) GetUserById(ctx context.Context, user_id int64) (model.User, error) {
-	const op = "repository.GetUserById"
-	var user model.User
-
-	err := r.db.QueryRow(`
-		SELECT id, name, password, phone, app_id
-		FROM users
-		WHERE id = $1
-	`, user_id).Scan(&user.Id, &user.Name, &user.PassHash, &user.Phone, &user.AppId)
-	if err != nil {
-		return user, fmt.Errorf("%s: %w", op, err)
-	}
-
-	return user, nil
-}

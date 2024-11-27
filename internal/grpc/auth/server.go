@@ -13,6 +13,9 @@ import (
 type AuthService interface {
 	Login(ctx context.Context, phone string, password string, appId int32) (token string, err error)
 	Register(ctx context.Context, name string, phone string, password string, appId int32) (token string, err error)
+    UpdateUser(ctx context.Context, user *ssov1.User) (*ssov1.User, error)
+    GetUser(ctx context.Context, user_id int64) (*ssov1.User, error)
+    DeleteUser(ctx context.Context, user_id int64) (bool, error)
 	ForgetPassword(ctx context.Context, phone string, password string, app_id int32) (token string, err error)
 	ChangePassword(ctx context.Context, phone string, password string, app_id int32) (token string, err error)
 }
@@ -120,4 +123,60 @@ func (s *serverAPI) ForgetPassword(ctx context.Context, req *ssov1.ForgetPasswor
 	return &ssov1.ForgetPasswordResponse{
 		Token: token,
 	}, nil
+}
+
+func (s *serverAPI) UpdateUser(ctx context.Context, req *ssov1.UpdateUserRequest) (*ssov1.UpdateUserResponse, error) {
+    if govalidator.IsNull(req.GetUser().GetName()) {
+		return nil, status.Error(codes.InvalidArgument, "name is required")
+	}
+    
+    if govalidator.IsNull(req.GetUser().GetPhone()) {
+		return nil, status.Error(codes.InvalidArgument, "phone is required")
+	}
+
+    if !govalidator.IsPositive(float64(req.GetUser().GetId())) {
+		return nil, status.Error(codes.InvalidArgument, "user id is required")
+	}
+
+    if !govalidator.IsPositive(float64(req.GetUser().GetAppId())) {
+		return nil, status.Error(codes.InvalidArgument, "app id is required")
+	}
+
+    user, err := s.auth.UpdateUser(ctx, req.GetUser())
+    if err != nil {
+        return nil, status.Error(codes.Internal, "internal error")
+    }
+    return &ssov1.UpdateUserResponse{
+        User: user,
+    }, err
+}
+
+func (s *serverAPI) GetUser(ctx context.Context, req *ssov1.GetUserRequest) (*ssov1.GetUserResponse, error) {
+    if !govalidator.IsPositive(float64(req.GetUserId())) {
+		return nil, status.Error(codes.InvalidArgument, "user id is required")
+	}
+    
+    user, err := s.auth.GetUser(ctx, req.GetUserId())
+    if err != nil {
+        return nil, status.Error(codes.Internal, err.Error()) 
+    }
+
+    return &ssov1.GetUserResponse{
+        User: user,
+    }, nil
+}
+
+func (s *serverAPI) DeleteUser(ctx context.Context, req *ssov1.DeleteUserRequest) (*ssov1.DeleteUserResponse, error) {
+    if !govalidator.IsPositive(float64(req.GetUserId())) {
+		return nil, status.Error(codes.InvalidArgument, "user id is required")
+	}
+    
+    is_deleted, err := s.auth.DeleteUser(ctx, req.GetUserId())
+    if err != nil {
+        return nil, status.Error(codes.Internal, "internal error")
+    }
+
+    return &ssov1.DeleteUserResponse{
+        IsDeleted: is_deleted,
+    }, nil
 }
