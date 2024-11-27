@@ -12,9 +12,9 @@ import (
 
 type AuthService interface {
 	Login(ctx context.Context, phone string, password string, appId int32) (token string, err error)
-	Register(ctx context.Context, name string, phone string, password string, appId int32) (user_id int64, err error)
-	ForgetPassword(ctx context.Context, password string) (token string, err error)
-	ChangePassword(ctx context.Context, phone string) (token string, err error)
+	Register(ctx context.Context, name string, phone string, password string, appId int32) (token string, err error)
+	ForgetPassword(ctx context.Context, phone string, password string, app_id int32) (token string, err error)
+	ChangePassword(ctx context.Context, phone string, password string, app_id int32) (token string, err error)
 }
 
 type serverAPI struct {
@@ -66,22 +66,30 @@ func (s *serverAPI) Register(ctx context.Context, req *ssov1.RegisterRequest) (*
 		return nil, status.Error(codes.InvalidArgument, "app_id is required")
 	}
 
-	user_id, err := s.auth.Register(ctx, req.GetName(), req.GetPhone(), req.GetPassword(), req.GetAppId())
+	token, err := s.auth.Register(ctx, req.GetName(), req.GetPhone(), req.GetPassword(), req.GetAppId())
 	if err != nil {
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
 	return &ssov1.RegisterResponse{
-		UserId: user_id,
+		Token: token,
 	}, nil
 }
 
 func (s *serverAPI) ChangePassword(ctx context.Context, req *ssov1.ChangePasswordRequest) (*ssov1.ChangePasswordResponse, error) {
-	if govalidator.IsNull(req.GetOldPassword()) {
+	if !govalidator.IsPositive(float64(req.GetAppId())) {
 		return nil, status.Error(codes.InvalidArgument, "app_id is required")
 	}
 
-	token, err := s.auth.ChangePassword(ctx, req.GetOldPassword())
+	if govalidator.IsNull(req.GetPhone()) {
+		return nil, status.Error(codes.InvalidArgument, "phone is required")
+	}
+
+	if govalidator.IsNull(req.GetOldPassword()) {
+		return nil, status.Error(codes.InvalidArgument, "old password is required")
+	}
+
+	token, err := s.auth.ChangePassword(ctx, req.Phone, req.GetOldPassword(), req.GetAppId())
 	if err != nil {
 		return nil, status.Error(codes.Internal, "internal error")
 	}
@@ -92,11 +100,19 @@ func (s *serverAPI) ChangePassword(ctx context.Context, req *ssov1.ChangePasswor
 }
 
 func (s *serverAPI) ForgetPassword(ctx context.Context, req *ssov1.ForgetPasswordRequest) (*ssov1.ForgetPasswordResponse, error) {
-	if govalidator.IsNull(req.GetPhone()) {
+	if !govalidator.IsPositive(float64(req.GetAppId())) {
 		return nil, status.Error(codes.InvalidArgument, "app_id is required")
 	}
 
-	token, err := s.auth.ForgetPassword(ctx, req.GetPhone())
+	if govalidator.IsNull(req.GetPhone()) {
+		return nil, status.Error(codes.InvalidArgument, "phone is required")
+	}
+
+	if govalidator.IsNull(req.GetNewPassword()) {
+		return nil, status.Error(codes.InvalidArgument, "password is required")
+	}
+
+	token, err := s.auth.ForgetPassword(ctx, req.GetPhone(), req.GetNewPassword(), req.GetAppId())
 	if err != nil {
 		return nil, status.Error(codes.Internal, "internal error")
 	}

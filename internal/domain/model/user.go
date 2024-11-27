@@ -5,4 +5,5 @@ type User struct {
 	Phone    string
 	Name     string
 	PassHash []byte
+	AppId    int32
 }

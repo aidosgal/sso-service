@@ -4,7 +4,7 @@ go 1.23.2
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
-	github.com/ei-jobs/protos v0.0.2
+	github.com/ei-jobs/protos v0.0.3
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	google.golang.org/grpc v1.68.0
 )

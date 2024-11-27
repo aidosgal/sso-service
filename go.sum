@@ -2,8 +2,8 @@ github.com/BurntSushi/toml v1.2.1 h1:9F2/+DoOYIOksmaJFPw1tGFy1eDnIJXg+UHjuD8lTak
 github.com/BurntSushi/toml v1.2.1/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 h1:DklsrG3dyBCFEj5IhUbnKptjxatkF07cF2ak3yi77so=
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2/go.mod h1:WaHUgvxTVq04UNunO+XhnAqY/wQc+bxr74GqbsZ/Jqw=
-github.com/ei-jobs/protos v0.0.2 h1:xkZl4nLel8roFctesNmpx9GCvNHQW9rBYBd8Wmrgzaw=
-github.com/ei-jobs/protos v0.0.2/go.mod h1:DWAnMQxMKtpkcQU/ejl3Wgp4Kb/G2VgdXI7tmb5S5+A=
+github.com/ei-jobs/protos v0.0.3 h1:KlCSSCilBkBma09isg8xYZ+g9zisdi11SVZy8IK6vyc=
+github.com/ei-jobs/protos v0.0.3/go.mod h1:F/EP32k9OKPevR+z5lFXIS6kfR1druMnGhajR5Qlf/8=
 github.com/golang/protobuf v1.5.4 h1:i7eJL8qZTpSEXOPTxNKhASYpMn+8e5Q6AdndVa1dWek=
 github.com/golang/protobuf v1.5.4/go.mod h1:lnTiLA8Wa4RWRcIUkrtSVa5nRhsEGBg48fD6rSs7xps=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
