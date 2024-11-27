@@ -133,9 +133,85 @@ func (s *AuthService) Register(ctx context.Context, name string, phone string, p
 }
 
 func (s *AuthService) ForgetPassword(ctx context.Context, phone string, password string, app_id int32) (string, error) {
-	return "", nil
+    const op = "authservice.ForgetPassword"
+
+    //ToDo: implement to logic sending the sms code and receiving it
+
+    return s.ChangePassword(ctx, phone, password, app_id)
 }
 
 func (s *AuthService) ChangePassword(ctx context.Context, phone string, password string, app_id int32) (string, error) {
-	return "", nil
+    const op = "authservice.ChangePassword"
+
+    var wg sync.WaitGroup
+    errChan := make(chan error, 2)
+    userChan := make(chan *model.User, 1)
+    appChan := make(chan *model.App, 1)
+
+    wg.Add(1) 
+    go func() {
+        defer wg.Done()
+        passHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+        if err != nil {
+            errChan <- err
+            return
+        }
+        user, err := s.repository.UpdatePassword(ctx, phone, app_id, passHash)
+        if err != nil {
+            errChan <- err
+            return
+        }
+        userChan <- &user
+    }()
+
+    wg.Add(1)
+    go func() {
+        defer wg.Done()
+
+        app, err := s.repository.GetAppById(ctx, app_id)
+        if err != nil {
+            errChan <- err
+            return
+        }
+        appChan <- &app
+    }()
+
+    go func() {
+        wg.Wait()
+        close(errChan)
+        close(userChan)
+        close(appChan)
+    }()
+
+    var user *model.User
+    var app *model.App
+    for {
+        select {
+        case err := <-errChan:
+            if err != nil {
+                return "", fmt.Errorf("%s: %w", op, err)
+            }
+        case u := <-userChan:
+            if u != nil {
+                user = u
+            }
+        case a := <-appChan:
+            if a != nil {
+                app = a
+            }
+        case <-ctx.Done():
+            return "", fmt.Errorf("%s: context cancelled", op)
+        }
+
+        if user != nil && app != nil {
+            break
+        }
+    }
+
+    token, err := jwt.NewToken(user, app, time.Hour * 24 * 365)
+    if err != nil {
+        return "", fmt.Errorf("%s: %w", op, err)
+    }
+
+	return token, nil
 }
