@@ -41,7 +41,7 @@ func (s *serverAPI) Login(ctx context.Context, req *ssov1.LoginRequest) (*ssov1.
 
 	token, err := s.auth.Login(ctx, req.GetPhone(), req.GetPassword(), req.GetAppId())
 	if err != nil {
-		return nil, status.Error(codes.Internal, "internal error")
+		return nil, status.Error(codes.InvalidArgument, "invalid phone or password")
 	}
 
 	return &ssov1.LoginResponse{
